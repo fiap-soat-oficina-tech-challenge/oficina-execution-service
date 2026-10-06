@@ -1,0 +1,8 @@
+# Sobe o serviço localmente: `docker compose up --build`.
+# Swagger em http://localhost:3002/execution/api e saúde em http://localhost:3002/execution/health.
+services:
+  execution:
+    build: .
+    env_file: .env
+    ports:
+      - "3002:3000"
