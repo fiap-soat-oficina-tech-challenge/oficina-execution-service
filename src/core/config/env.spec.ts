@@ -1,6 +1,14 @@
 import { PREFIXO_ROTAS, validateEnv } from './env';
 
-const OBRIGATORIAS = ['NODE_ENV', 'APPLICATION_PORT', 'JWT_SECRET'];
+const OBRIGATORIAS = [
+  'NODE_ENV',
+  'APPLICATION_PORT',
+  'JWT_SECRET',
+  'AWS_REGION',
+  'EXECUTION_COMMANDS_QUEUE_URL',
+  'SAGA_REPLIES_QUEUE_URL',
+  'DYNAMODB_TABLE_TAREFAS',
+];
 
 describe('validateEnv', () => {
   const original = { ...process.env };

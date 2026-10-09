@@ -10,6 +10,13 @@ data:
   APPLICATION_PORT: "3000"
   LOG_LEVEL: "info"
 
+  # Mensageria e banco (terraform/). As credenciais da AWS vêm da role dos nós do
+  # EKS, não de variável.
+  AWS_REGION: "us-east-1"
+  EXECUTION_COMMANDS_QUEUE_URL: "https://sqs.us-east-1.amazonaws.com/008363475762/oficina-execution-commands"
+  SAGA_REPLIES_QUEUE_URL: "https://sqs.us-east-1.amazonaws.com/008363475762/oficina-os-saga-replies"
+  DYNAMODB_TABLE_TAREFAS: "oficina-execution-tarefas"
+
   # Observabilidade — mesmos valores do OS Service, mudando só o nome do app.
   NEW_RELIC_ENABLED: "true"
   NEW_RELIC_APP_NAME: "oficina-execution"
