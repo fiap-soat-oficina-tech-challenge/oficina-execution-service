@@ -70,9 +70,9 @@ spec:
             limits:
               cpu: "500m"
               memory: "512Mi"
-          # Enquanto o serviço não tem dependências, readiness e liveness usam o
-          # mesmo endpoint; a readiness passa a checar banco e filas quando eles
-          # entrarem.
+          # Liveness rasa (o processo responde) e readiness com a tabela de
+          # tarefas: um pod sem acesso ao DynamoDB sai do Service, mas não é
+          # reiniciado — reiniciar não resolve permissão ou rede.
           startupProbe:
             httpGet:
               path: /execution/health
@@ -82,7 +82,7 @@ spec:
             failureThreshold: 24
           readinessProbe:
             httpGet:
-              path: /execution/health
+              path: /execution/health/ready
               port: 3000
             periodSeconds: 10
             timeoutSeconds: 3

@@ -19,4 +19,11 @@ export function validateEnv(): void {
   must('NODE_ENV');
   must('APPLICATION_PORT');
   must('JWT_SECRET');
+
+  // Mensageria e banco (terraform/): a fila consumida, a fila de respostas da
+  // Saga e a tabela de tarefas.
+  must('AWS_REGION');
+  must('EXECUTION_COMMANDS_QUEUE_URL');
+  must('SAGA_REPLIES_QUEUE_URL');
+  must('DYNAMODB_TABLE_TAREFAS');
 }

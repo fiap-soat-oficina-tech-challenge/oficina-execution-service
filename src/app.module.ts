@@ -4,12 +4,15 @@ import { LoggerModule } from 'nestjs-pino';
 import { randomUUID } from 'node:crypto';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import {
+  contextoDoFluxo,
   metadadosDeTrace,
   tagsDeObservabilidade,
 } from './common/observability';
 import { TelemetriaShutdown } from './common/observability/telemetria-shutdown';
+import { AwsModule } from './common/aws/aws.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { HealthModule } from './modules/health/health.module';
+import { TarefaModule } from './modules/tarefa/tarefa.module';
 
 @Module({
   imports: [
@@ -58,7 +61,10 @@ import { HealthModule } from './modules/health/health.module';
         // `entity.name` do APM. É o que liga log e trace distribuído nos dois
         // sentidos. Com o agente desligado devolve objeto vazio, e o log sai
         // igual, sem os campos de correlação.
-        mixin: () => metadadosDeTrace(),
+        //
+        // No consumo de mensagens (fora de requisição HTTP) acrescenta também o
+        // correlationId e a OS do fluxo, vindos do envelope da mensagem.
+        mixin: () => ({ ...metadadosDeTrace(), ...contextoDoFluxo() }),
 
         genReqId: (req: IncomingMessage, res: ServerResponse) => {
           const header =
@@ -114,8 +120,10 @@ import { HealthModule } from './modules/health/health.module';
         ],
       },
     }),
+    AwsModule,
     AuthModule,
     HealthModule,
+    TarefaModule,
   ],
   providers: [TelemetriaShutdown],
 })

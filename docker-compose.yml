@@ -1,8 +1,32 @@
-# Sobe o serviço localmente: `docker compose up --build`.
-# Swagger em http://localhost:3002/execution/api e saúde em http://localhost:3002/execution/health.
+# Sobe o serviço com SQS e DynamoDB simulados pelo LocalStack:
+#   docker compose up --build
+# Swagger em http://localhost:3002/execution/api e saúde em
+# http://localhost:3002/execution/health/ready.
 services:
+  localstack:
+    # Versão fixa: imagens mais novas do LocalStack podem exigir token de conta.
+    image: localstack/localstack:4.0
+    ports:
+      - "4566:4566"
+    environment:
+      SERVICES: sqs,dynamodb
+    volumes:
+      - ./localstack/init:/etc/localstack/init/ready.d:ro
+    healthcheck:
+      test: ["CMD", "awslocal", "dynamodb", "describe-table", "--table-name", "oficina-execution-tarefas"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
   execution:
     build: .
     env_file: .env
+    environment:
+      AWS_ENDPOINT_URL: http://localstack:4566
+      EXECUTION_COMMANDS_QUEUE_URL: http://localstack:4566/000000000000/oficina-execution-commands
+      SAGA_REPLIES_QUEUE_URL: http://localstack:4566/000000000000/oficina-os-saga-replies
     ports:
       - "3002:3000"
+    depends_on:
+      localstack:
+        condition: service_healthy
