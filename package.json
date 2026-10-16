@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "Fila de diagnóstico e reparo das ordens de serviço.",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "MIT",
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\"",
