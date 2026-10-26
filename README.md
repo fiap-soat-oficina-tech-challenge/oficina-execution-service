@@ -291,7 +291,7 @@ Resultado atual: **122 testes, 98,9% de linhas** (98,8% de instruções, 90,4% d
 | Infraestrutura | consultas ao DynamoDB (índice certo por filtro, paginação, escrita condicional) e o consumidor SQS (só apaga depois de processar, mensagem fora do formato, parada limpa) |
 | Interface | rotas e ligação da fila aos casos de uso |
 
-O CI (`.github/workflows/ci.yml`) roda lint, testes com cobertura e build em todo PR; o check `Build & Test` é obrigatório para o merge na `main`.
+O CI (`.github/workflows/ci.yml`) roda lint, testes com cobertura e build em todo PR; o check `Build & Test` é obrigatório para o merge na `main`. No push na `develop` e na `main`, o mesmo CI roda como primeiro estágio do [deploy](#deploy).
 
 ## Variáveis de ambiente
 
@@ -308,9 +308,34 @@ As credenciais da AWS vêm da role dos nós do EKS (cadeia padrão do SDK), não
 
 ## Deploy
 
-Os manifestos ficam em `k8s/`, no namespace `oficina-execution`. A ordem de aplicação acompanha a numeração dos arquivos: ConfigMap, Deployment, Service, HPA, Ingress e PDB. O Ingress compartilha o ALB dos três serviços (`group.name: oficina`) e encaminha `/execution` para este serviço. A readiness checa a tabela: um pod sem acesso ao DynamoDB sai do Service, mas não é reiniciado. Os segredos (`JWT_SECRET` e a license key do New Relic) chegam pelo Secret `execution-secret`, montado a partir do SSM. O pipeline de deploy no EKS entra na etapa de integração do plano de ação.
+O deploy é automático, pelo workflow `.github/workflows/cd.yml`, a cada push na `develop` e na `main`. As duas branches vão para o mesmo cluster.
 
-A infraestrutura AWS do serviço (fila, tabela, repositório de imagens e permissões) está em [`terraform/`](terraform/README.md).
+```mermaid
+flowchart LR
+    CI["CI<br/>lint · testes (mínimo 80%) · build"]
+    AMB{"Ambiente<br/>no ar?"}
+    IMG["Imagem<br/>ECR oficina-execution-service"]
+    DEP["Deploy no EKS<br/>Secret do SSM · ConfigMap · rollout"]
+    SMK["Smoke test"]
+    PULA["Pulado, com aviso"]
+
+    CI --> IMG
+    AMB -->|sim| IMG
+    AMB -->|não| PULA
+    IMG --> DEP --> SMK
+```
+
+| Estágio | O que faz |
+|---|---|
+| CI | O mesmo workflow dos PRs (`ci.yml`). Se falhar, nada é publicado. |
+| Ambiente na AWS | O ambiente só existe nas janelas de integração e demonstração. Sem o secret `AWS_ROLE_ARN` ou sem o cluster `tc3-oficina-homolog`, a imagem e o deploy são pulados com um aviso no resumo da execução. Qualquer outro erro falha o pipeline. |
+| Build & Push (ECR) | Imagem `linux/amd64` com duas tags: o commit e a branch. |
+| Deploy (EKS) | Monta o Secret `execution-secret` a partir do SSM (`JWT_SECRET` e a license key do New Relic), aplica o ConfigMap e depois Deployment, Service, HPA, Ingress e PDB, esperando o rollout. Um deploy por vez. |
+| Smoke test | Readiness com a tabela do DynamoDB, rota protegida respondendo 401 sem JWT e o HPA com ao menos duas réplicas. Não grava dados: o fluxo com os outros serviços é conferido pelo smoke test do OS Service. |
+
+Os manifestos ficam em `k8s/`, no namespace `oficina-execution`, numerados na ordem de aplicação. O Ingress compartilha o ALB dos três serviços (`group.name: oficina`) e encaminha `/execution` para este serviço. A readiness checa a tabela: um pod sem acesso ao DynamoDB sai do Service, mas não é reiniciado.
+
+A infraestrutura AWS do serviço (fila, tabela, repositório de imagens e permissões) está em [`terraform/`](terraform/README.md). O pipeline assume a role `tc3-github-actions` por OIDC, sem chave de acesso guardada no GitHub. O secret `AWS_ROLE_ARN` é o ARN dessa role, e o repositório precisa estar na lista de repositórios aceitos por ela (`bootstrap/` de `tc3-infra-k8s`).
 
 ## Fluxo de trabalho
 
