@@ -30,6 +30,8 @@ data "aws_iam_policy_document" "acesso" {
       "dynamodb:PutItem",
       "dynamodb:UpdateItem",
       "dynamodb:Query",
+      # Readiness (/execution/health/ready) confere se a tabela responde.
+      "dynamodb:DescribeTable",
     ]
     resources = [
       aws_dynamodb_table.tarefas.arn,
