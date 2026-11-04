@@ -20,7 +20,7 @@ As credenciais da AWS para o SQS e o DynamoDB não são segredo: vêm da role do
 
 ## Dependências e ordem
 
-A VPC e o cluster vêm de [`tc3-infra-k8s`](https://github.com/tiagostorch/tc3-infra-k8s), lidos pelo state remoto. Por isso:
+A VPC e o cluster vêm de [`tc3-infra-k8s`](https://github.com/fiap-soat-oficina-tech-challenge/tc3-infra-k8s), lidos pelo state remoto. Por isso:
 
 - **apply:** depois de `tc3-infra-k8s`;
 - **destroy:** antes de `tc3-infra-k8s`, porque a AWS não apaga a role dos nós com esta política ainda anexada.
