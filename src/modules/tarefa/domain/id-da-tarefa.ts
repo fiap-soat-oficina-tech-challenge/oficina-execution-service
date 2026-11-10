@@ -10,7 +10,7 @@ export const NAMESPACE_TAREFAS = 'b6f1d3a2-6c1e-4b7a-9f2d-3e8a5c4b1d07';
  */
 export function uuidV5(nome: string, namespace: string): string {
   const ns = Buffer.from(namespace.replace(/-/g, ''), 'hex');
-  const hash = createHash('sha1')
+  const hash = createHash('sha1') // NOSONAR: o UUID v5 da RFC 4122 usa SHA-1; aqui o hash só gera um id determinístico e não protege nenhum dado
     .update(Buffer.concat([ns, Buffer.from(nome, 'utf8')]))
     .digest();
 
