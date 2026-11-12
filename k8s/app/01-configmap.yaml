@@ -1,0 +1,32 @@
+# Configuração não sensível. Segredos (JWT_SECRET, license key do New Relic)
+# chegam pelo Secret `execution-secret`, criado pelo CD a partir do SSM.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: execution-config
+  namespace: oficina-execution
+data:
+  NODE_ENV: "production"
+  APPLICATION_PORT: "3000"
+  LOG_LEVEL: "info"
+
+  # Mensageria e banco (terraform/). As credenciais da AWS vêm da role dos nós do
+  # EKS, não de variável.
+  AWS_REGION: "us-east-1"
+  EXECUTION_COMMANDS_QUEUE_URL: "https://sqs.us-east-1.amazonaws.com/008363475762/oficina-execution-commands"
+  SAGA_REPLIES_QUEUE_URL: "https://sqs.us-east-1.amazonaws.com/008363475762/oficina-os-saga-replies"
+  DYNAMODB_TABLE_TAREFAS: "oficina-execution-tarefas"
+
+  # Observabilidade — mesmos valores do OS Service, mudando só o nome do app.
+  NEW_RELIC_ENABLED: "true"
+  NEW_RELIC_APP_NAME: "oficina-execution"
+  NEW_RELIC_LABELS: "environment:production;project:tech-challenge-fiap"
+  NEW_RELIC_NO_CONFIG_FILE: "true"
+  NEW_RELIC_DISTRIBUTED_TRACING_ENABLED: "true"
+  NEW_RELIC_DISTRIBUTED_TRACING_EXCLUDE_NEWRELIC_HEADER: "true"
+  NEW_RELIC_TRANSACTION_EVENTS_MAX_SAMPLES_STORED: "2000"
+  NEW_RELIC_SPAN_EVENTS_MAX_SAMPLES_STORED: "1000"
+  NEW_RELIC_APPLICATION_LOGGING_FORWARDING_ENABLED: "false"
+  NEW_RELIC_APPLICATION_LOGGING_LOCAL_DECORATING_ENABLED: "false"
+  NEW_RELIC_LOG: "stdout"
+  NEW_RELIC_LOG_LEVEL: "warn"
